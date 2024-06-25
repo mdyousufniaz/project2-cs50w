@@ -127,3 +127,5 @@ CSRF_TRUSTED_ORIGINS = [
     'https://solid-space-zebra-4jgwj44x664hjj69.github.dev-8000.preview.app.github.dev',
     'https://localhost:8000'
 ]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.SmallAutoField'
