@@ -6,24 +6,53 @@
 
 <div class="container-fluid m-3">
     <h2>User Profile</h2>
-    <p>username : <span class="lead">{{ user.username }}</span></p>
-    <p>email : <span class="lead">{{ user.email }}</p>
+    <p>user : <i class="lead">
+        {% if new_user == user %}
+        {{ user.username }}
+        {% else %}
+        {{ new_user.username }}
+        {% endif %}
+    </i></p>
+    <p>email : <i class="lead">
+        {% if new_user == user %}
+        {{ user.email }}
+        {% else %}
+        {{ new_user.email }}
+        {% endif %}
+    </i>
+        {% if new_user != user %}
+        (for contact)
+        {% endif %}
+    </p>
 
     <hr>
+    
+    <h2>
+        {% if new_user == user %}
+        My
+        {% else %}
+        User's Active
+        {% endif %}    
+    Listings:</h2>
 
-    <h2>My Listings:</h2>
-    <form class="float-right" action="{% url 'profile' %}"" method="post">
-        {% csrf_token %}
-        {{ listing_filter }}
-    </form>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var filterSelect = document.querySelector('select[name="filter_option"]');
-            filterSelect.addEventListener('change', function () {
-                this.form.submit();
+    {% if new_user == user %}
+        <form class="float-right" action="{% url 'profile' user.id %}" method="post">
+            {% csrf_token %}
+            {{ listing_filter }}
+        </form>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var filterSelect = document.querySelector('select[name="filter_option"]');
+                filterSelect.addEventListener('change', function () {
+                    this.form.submit();
+                });
             });
-        });
-    </script>
+        </script>
+    {% else %}
+        
+    {% endif %}
+
+    
 </div>
 
 {% endblock %}

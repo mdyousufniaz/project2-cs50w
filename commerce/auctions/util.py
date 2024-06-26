@@ -1,6 +1,20 @@
 from django import forms
 from .models import Listing, User
 
+class ListingForm1(forms.Form):
+
+    title = forms.CharField(label="Title" + f" (max {Listing._meta.get_field('title').max_length} words)")
+    description = forms.CharField(label="Description" + f" (max {Listing._meta.get_field('description').max_length} words)", widget=forms.Textarea(attrs={"rows": 4}))
+    start_bid = forms.DecimalField(label="Starting Bid in $ (upto 2 decimal places)", decimal_places=2, localize=True, min_value=0.01)
+    image_url = forms.URLField(label="Image URL (provide a valid URL for the Image of the lisiting)", empty_value="th.bing.com/th/id/OIP.mq4EytPnqsxmByNt_UmE8wHaHa?pid=ImgDet&w=203&h=203&c=7&dpr=1.3", assume_scheme="https")
+    category = forms.ChoiceField(label="Category", choices=Listing.CATEGORIES)
+
+class ListingForm2(forms.ModelForm):
+    class Meta:
+        model = Listing
+        exclude = ["bids", "comments", "creation_time", "is_active", "owner"]
+        
+
 class ListingForm(forms.ModelForm):
     class Meta:
         model = Listing

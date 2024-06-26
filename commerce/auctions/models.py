@@ -23,25 +23,25 @@ class Comment(models.Model):
 
 class Listing(models.Model):
     CATEGORIES = (
-        "No Category",
-        "Fashion",
-        "Toys",
-        "Electronics",
+        ('grey', "No Category" ),
+        ('blue', "Fashion"),
+        ('yellow', "Toys"),
+        ('green', "Electronics"),
         "Home",
         "Other"
     )
 
-    CATEGORIES = ((category, category) for category in CATEGORIES)
+    CATEGORIES = tuple(((category, category) for category in CATEGORIES))
 
     title = models.CharField(max_length=100)
     description = models.TextField(max_length=500)
     start_bid = models.FloatField()
-    image_url = models.URLField(max_length=300, blank=True)
+    image_url = models.URLField(max_length=300, blank=True, default="https://th.bing.com/th/id/OIP.mq4EytPnqsxmByNt_UmE8wHaHa?pid=ImgDet&w=203&h=203&c=7&dpr=1.3")
     is_active = models.BooleanField(default=True)
     bids = models.ForeignKey(Bid, null=True, on_delete=models.CASCADE)
     comments = models.ForeignKey(Comment, null=True, on_delete=models.CASCADE)
     category = models.CharField(choices=CATEGORIES, default="No Category", max_length=50)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    owner = models.OneToOneField(User, on_delete=models.CASCADE)
     creation_time = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

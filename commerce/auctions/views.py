@@ -90,7 +90,7 @@ def create_listing(request):
         "form": ListingForm()
     })
 
-def profile_view(request):
+def profile_view(request, user_id):
     if request.method == "POST":
         form = ListingFilter(request.POST)
         if form.is_valid():
@@ -100,6 +100,8 @@ def profile_view(request):
         })
         else:
             pass
+        
     return render(request, "auctions/profile.html", {
+        "new_user": User.objects.get(id=user_id),
         "listing_filter": ListingFilter()
     })

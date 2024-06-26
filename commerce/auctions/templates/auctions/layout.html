@@ -32,7 +32,7 @@
                         <a class="nav-link" href="{% url 'create_listing' %}">Create Listing</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'profile' %}">My Profile</a>
+                        <a class="nav-link" href="{% url 'profile' user.id %}">My Profile</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'logout' %}">Logout</a>
