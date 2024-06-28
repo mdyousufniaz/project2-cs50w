@@ -1,15 +1,18 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 class User(AbstractUser):
-    watchlist = models.ForeignKey('Listing', null=True, on_delete=models.CASCADE)
+    watchlist = models.ForeignKey('Listing',
+                                    null=True,
+                                    on_delete=models.CASCADE)
 
     def __str__(self):
         return f"Id: {self.id}, Username: {self.username}, Email: {self.email}"
 
 class Bid(models.Model):
     bidder = models.OneToOneField(User, on_delete=models.CASCADE)
-    amount = models.FloatField()
+    amount = models.DecimalField(decimal_places=2, max_digits=10)
 
     def __str__(self):
         return f"Id: {self.id}, Bidder: {self.bidder.username}, Amount: ${self.amount}"
@@ -21,27 +24,30 @@ class Comment(models.Model):
     def __str__(self):
         return f"Id: {self.id}, Commenter: {self.commenter.username}, Text: {self.text}"
 
+
 class Listing(models.Model):
     CATEGORIES = (
-        ('grey', "No Category" ),
-        ('blue', "Fashion"),
-        ('yellow', "Toys"),
-        ('green', "Electronics"),
+        "No Category",
+        "Fashion",
+        "Toys",
+        "Electronics",
         "Home",
         "Other"
     )
 
-    CATEGORIES = tuple(((category, category) for category in CATEGORIES))
 
     title = models.CharField(max_length=100)
     description = models.TextField(max_length=500)
-    start_bid = models.FloatField()
-    image_url = models.URLField(max_length=300, blank=True, default="https://th.bing.com/th/id/OIP.mq4EytPnqsxmByNt_UmE8wHaHa?pid=ImgDet&w=203&h=203&c=7&dpr=1.3")
+    start_bid = models.DecimalField(decimal_places=2, max_digits=10)
+    image_url = models.URLField(max_length=400, 
+                                default="https://th.bing.com/th/id/OIP.mq4EytPnqsxmByNt_UmE8wHaHa?pid=ImgDet&w=203&h=203&c=7&dpr=1.3")
     is_active = models.BooleanField(default=True)
-    bids = models.ForeignKey(Bid, null=True, on_delete=models.CASCADE)
-    comments = models.ForeignKey(Comment, null=True, on_delete=models.CASCADE)
-    category = models.CharField(choices=CATEGORIES, default="No Category", max_length=50)
-    owner = models.OneToOneField(User, on_delete=models.CASCADE)
+    bids = models.ForeignKey(Bid, null=True, blank=True, on_delete=models.CASCADE)
+    comments = models.ForeignKey(Comment, null=True, blank=True, on_delete=models.CASCADE)
+    category = models.CharField(choices=[(category, _(category)) for category in CATEGORIES],
+                                default="No Category",
+                                max_length=15)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings")
     creation_time = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -58,3 +64,5 @@ class Listing(models.Model):
             f"Owner: {self.owner.username}, "
             f"Creation Time: {self.creation_time}"
         )
+
+    

@@ -74,18 +74,13 @@ def create_listing(request):
     if request.method == "POST":
         form = ListingForm(request.POST)
         if form.is_valid():
-            title = form.cleaned_data["title"]
-            description = form.cleaned_data["description"]
-            start_bid = form.cleaned_data["start_bid"]
-            image_url = form.cleaned_data["image_url"]
-            category = form.cleaned_data["category"]
-            Listing.objects.all().delete()
-            listing = Listing(title=title, description=description, start_bid=start_bid, image_url=image_url, category=category, owner=request.user)
-            #listing.save()
-            print(listing)
-
+            print(form.cleaned_data)
             
             return HttpResponseRedirect(reverse("index"))
+        else:
+            render(request, "auctions/create_listing.html",{
+            "form": form
+        })
     return render(request, "auctions/create_listing.html",{
         "form": ListingForm()
     })

@@ -1,20 +1,36 @@
 from django import forms
-from .models import Listing, User
+from .models import Listing
+from django.utils.translation import gettext_lazy as _
 
-class ListingForm1(forms.Form):
-
-    title = forms.CharField(label="Title" + f" (max {Listing._meta.get_field('title').max_length} words)")
-    description = forms.CharField(label="Description" + f" (max {Listing._meta.get_field('description').max_length} words)", widget=forms.Textarea(attrs={"rows": 4}))
-    start_bid = forms.DecimalField(label="Starting Bid in $ (upto 2 decimal places)", decimal_places=2, localize=True, min_value=0.01)
-    image_url = forms.URLField(label="Image URL (provide a valid URL for the Image of the lisiting)", empty_value="th.bing.com/th/id/OIP.mq4EytPnqsxmByNt_UmE8wHaHa?pid=ImgDet&w=203&h=203&c=7&dpr=1.3", assume_scheme="https")
-    category = forms.ChoiceField(label="Category", choices=Listing.CATEGORIES)
-
-class ListingForm2(forms.ModelForm):
+class ListingForm(forms.ModelForm):
     class Meta:
         model = Listing
         exclude = ["bids", "comments", "creation_time", "is_active", "owner"]
+    
+    def clean_image_url(self):
+        image_url = self.cleaned_data.get('image_url')
+        if not image_url:
+            image_url = Listing._meta.get_field('image_url').get_default()
+        return image_url
         
+    def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.fields['description'].widget.attrs['rows'] = 4
+            self.fields['image_url'].initial = ""
+            self.fields['image_url'].required = False
+            self.fields['image_url'].label += _(" (optional)")
+            self.fields['start_bid'].label += _(" (in $)")
+            for i, field in self.fields.items():
+                if field.widget.attrs.get('class', None):
+                    field.widget.attrs['class'] += 'form-control'
+                else:
+                    field.widget.attrs.update({'class': 'form-control'})
 
+                
+
+
+        
+"""
 class ListingForm(forms.ModelForm):
     class Meta:
         model = Listing
@@ -41,6 +57,7 @@ class ListingForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.label_suffix = "*" if field.required else ""
             field.widget.attrs['label_class'] = 'form-label'
+"""
 
 class ListingFilter(forms.Form):
     CHOICES = [
