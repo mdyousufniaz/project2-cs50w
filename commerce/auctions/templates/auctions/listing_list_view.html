@@ -1,0 +1,27 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <div class="container-fluid m-3">
+        {% block header %}
+        {% endblock %}
+        <div class="container-fluid p-2">
+        {% for listing in listing_list %}
+            <div class="row m-3 p-3">
+                <div class="col-lg-4 d-flex justify-content-center align-items-center">
+                    <img src="{{ listing.image_url }}" alt="an image of {{ listing.title }}" class="img-fluid img-thumbnail fixed-size-img" onerror="this.onerror=null; this.src='{{ default_image }}';">
+                </div>
+                <div class="col-lg-8">
+                    <h3><a>{{ listing.title }}</a></h3>
+                    <p><b>Price: </b>${{ listing.start_bid }}</p>
+                    <p class="text-muted pl-4">Created {{ listing.creation_time }}</p>
+                    <a href="#" class="btn btn-danger">Add to Watchlist</a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="container text-center bg-danger text-light p-3">
+                No Listing Available...
+            </div>
+        {% endfor %}
+        </div>
+    </div>
+{% endblock %}

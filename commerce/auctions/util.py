@@ -1,63 +1,50 @@
 from django import forms
-from .models import Listing
+from .models import Listing, Bid, Comment
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Max
+from decimal import Decimal
 
 class ListingForm(forms.ModelForm):
     class Meta:
         model = Listing
-        exclude = ["bids", "comments", "creation_time", "is_active", "owner"]
-    
-    def clean_image_url(self):
-        image_url = self.cleaned_data.get('image_url')
-        if not image_url:
-            image_url = Listing._meta.get_field('image_url').get_default()
-        return image_url
+        exclude = ["creation_time", "is_active", "owner"]
         
     def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.fields['description'].widget.attrs['rows'] = 4
-            self.fields['image_url'].initial = ""
-            self.fields['image_url'].required = False
-            self.fields['image_url'].label += _(" (optional)")
-            self.fields['start_bid'].label += _(" (in $)")
-            for i, field in self.fields.items():
-                if field.widget.attrs.get('class', None):
-                    field.widget.attrs['class'] += 'form-control'
-                else:
-                    field.widget.attrs.update({'class': 'form-control'})
+        super().__init__(*args, **kwargs)
+        self.fields['description'].widget.attrs['rows'] = 4
+        self.fields['image_url'].required = False
+        self.fields['image_url'].label += _(" (optional)")
+        self.fields['start_bid'].label += _(" (in $)")
+        for i, field in self.fields.items():
+            if field.widget.attrs.get('class', None):
+                field.widget.attrs['class'] += 'form-control'
+            else:
+                field.widget.attrs.update({'class': 'form-control'})
 
-                
-
-
-        
-"""
-class ListingForm(forms.ModelForm):
+class BiddingForm(forms.ModelForm):
     class Meta:
-        model = Listing
-        exclude = ["bids", "comments", "creation_time", "is_active", "owner"]
-        widgets = {
-            "title": forms.TextInput(attrs={"class": "form-control"}),
-            "description": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
-            "start_bid": forms.NumberInput(attrs={"class": "form-control"}),
-            "image_url": forms.URLInput(attrs={"class": "form-control"}),
-            "category": forms.Select(attrs={"class": "form-control"}),
+        model = Bid
+        exclude = ['user', 'listing']
+
+        labels = {
+            'amount': 'Place Your Bid'
         }
 
     def __init__(self, *args, **kwargs):
+        listing = kwargs.pop('listing', None)
         super().__init__(*args, **kwargs)
-        self.fields["title"].label = self.fields["title"].label + f" (max {self.fields['title'].max_length} words)"
-        self.fields["description"].label = self.fields["description"].label + f" (max {self.fields['description'].max_length} words)"
-        self.fields["start_bid"].label = self.fields["start_bid"].label + " (in $)"
-        self.fields["image_url"].label = self.fields["image_url"].label + f" (provide a valid image for the lisiting)"
 
-        required_fields = ["title", "description", "start_bid", "category"]
-        for field_name in required_fields:
-            self.fields[field_name].required = True
+        self.fields['amount'].widget.attrs.update({
+            'placeholder': 'Enter your bid amount',
+            'class': 'form-control'
+        })
+        
 
-        for field_name, field in self.fields.items():
-            field.label_suffix = "*" if field.required else ""
-            field.widget.attrs['label_class'] = 'form-label'
-"""
+        if listing:
+            min_value = listing.bids.all().aggregate(Max('amount'))['amount__max'] + Decimal(0.01) if listing.bids.exists() else listing.start_bid
+            self.fields['amount'].widget.attrs.update({
+                'min': min_value
+            })
 
 class ListingFilter(forms.Form):
     CHOICES = [
@@ -66,4 +53,17 @@ class ListingFilter(forms.Form):
         ('inactive', 'Inactive'),
     ]
     
-    filter_option = forms.ChoiceField(choices=CHOICES, initial='all', widget=forms.Select)
+    filter_option = forms.ChoiceField(choices=CHOICES, initial='all', widget=forms.Select, label='Filter')
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['text']
+
+        widgets = {
+                'text': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Enter your comment here...'
+            })
+        }

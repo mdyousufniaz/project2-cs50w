@@ -1,58 +1,40 @@
-{% extends "auctions/layout.html" %}
+{% extends "auctions/listing_list_view.html" %}
 
 {% block title %}{{ user.username }}{% endblock %}
 
-{% block body %}
-
+{% block header %}
 <div class="container-fluid m-3">
     <h2>User Profile</h2>
-    <p>user : <i class="lead">
-        {% if new_user == user %}
-        {{ user.username }}
-        {% else %}
-        {{ new_user.username }}
-        {% endif %}
-    </i></p>
-    <p>email : <i class="lead">
-        {% if new_user == user %}
-        {{ user.email }}
-        {% else %}
-        {{ new_user.email }}
-        {% endif %}
-    </i>
+    <div class="text-center">
+        <h3>Username: <span class="lead">{{new_user.username}}</span></h3>
+        <h3>Email: <a class="lead" 
         {% if new_user != user %}
-        (for contact)
+            href="mailto{{new_user.email}}" title="for contact"
         {% endif %}
-    </p>
-
+            >{{new_user.email}}</a></h3>
+    </div>
     <hr>
-    
     <h2>
         {% if new_user == user %}
         My
         {% else %}
-        User's Active
+        {{new_user.username}}'s Active
         {% endif %}    
-    Listings:</h2>
-
+        Listings:
+    </h2>
     {% if new_user == user %}
-        <form class="float-right" action="{% url 'profile' user.id %}" method="post">
-            {% csrf_token %}
-            {{ listing_filter }}
-        </form>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                var filterSelect = document.querySelector('select[name="filter_option"]');
-                filterSelect.addEventListener('change', function () {
-                    this.form.submit();
-                });
-            });
-        </script>
-    {% else %}
-        
+        <div class="container">
+            <form action="{% url 'profile' user.id %}" method="post">
+                {% csrf_token %}
+                <div class="form-row justify-content-end align-items-center">
+                    <div class="col-auto mt-2">
+                        {{ listing_filter }}
+                    </div>
+                    <div class="col-auto">
+                        <input type="submit" class="btn btn-primary btn-sm" value="Filter">
+                    </div>
+                </div>
+            </form>
+        </div>
     {% endif %}
-
-    
-</div>
-
 {% endblock %}
