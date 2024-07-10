@@ -8,14 +8,14 @@
         Explore Our Categories 
     </h2>
     {% for category, listings in category_listings.items %}
-        <h3 class="m-3"><a href="#">{{category}}</a></h3>
+        <h3 class="m-3"><a href="{% url 'category' category|lower %}">{{category}}</a></h3>
         <div class="row flex-nowrap">
             {% for listing in listings %}
                     <div class="col-md-3 col-sm-6 mb-4">
                         <div class="card h-100">
                             <img src="{{ listing.image_url }}" class="card-img-top text-center" alt="{{ listing.title }}" onerror="this.onerror=null; this.src='{{ default_image }}';">
                             <div class="card-body">
-                                <h5 class="card-title">{{ listing.title }}</h5>
+                                <h5 class="card-title"><a href="{% url 'listing' listing.id %}">{{ listing.title }}</a></h5>
                                 <p class="card-text">Start Bid: ${{ listing.start_bid }}</p>
                             </div>
                         </div>

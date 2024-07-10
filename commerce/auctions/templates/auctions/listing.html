@@ -5,12 +5,26 @@
 {% block body %}
 <div class="container">
     <div class="row">
-        <div class="col-lg-10 mb-3">
+        <div class="col-lg-8 mb-3">
             <h2 class="display-4">Listing: {{ listing.title }}</h2>
-            <p class="text-muted pl-5 pt-2">--Created by: <a href="#">{{ listing.owner.username }}</a></p>
+            <p class="text-muted pl-5 pt-2">--Created by: <a href="{% url 'profile' listing.owner.id %}">{{ listing.owner.username }}</a></p>
+            <p class="lead ml-3">status:
+                <span class="text-light p-1 rounded m-3
+                    {% if listing.is_active %}
+                        bg-danger">Active
+                    {% else %}
+                        bg-secondary">Inactive
+                    {% endif %}
+                </span>
+            </p>
         </div>
-        <div class="col-lg-2 pl-4 mb-4">
-            <a href="#" class="btn btn-danger">Add to Watchlist</a>
+        <div class="col-lg-4 pl-4 mb-4">
+            {% if user in listing.observers.all %}
+                <i class="text-muted pl-4 m-3">Added to watchlist</i>
+                <a href="{% url 'modify_watchlist' 'remove' listing.id %}" class="btn btn-success m-3">Remove from watchlist</a>
+            {% else %}
+                <a href="{% url 'modify_watchlist' 'add' listing.id %}" class="btn btn-danger m-3">Add to Watchlist</a>
+            {% endif %}
         </div>
     </div>
     <div class="row">
@@ -21,7 +35,7 @@
             <div class="col-lg-4 p-3">
                 <h2>${{ listing.start_bid }}</h2>
             </div>
-            <span class="h2">Category: </span><a href="#" class="btn-success btn p-1 mb-1">{{ listing.category }}</a>
+            <span class="h2">Category: </span><a href="{% url 'category' listing.category|lower %}" class="btn-success btn p-1 mb-1">{{ listing.category }}</a>
             
         </div>
         <div class="col-lg-4 p-3">
@@ -32,16 +46,23 @@
     </div>
     <hr>
     <p class="display-4 mb-2 text-decoration-underline">Bids</p>
-    {% if listing.owner == user %}
-        <div class="text-center">
-            <a href="#" class="btn btn-success">Close Action</a>
-        </div>
+    {% if listing.is_active %}
+        {% if listing.owner == user %}
+            <div class="text-center">
+                <a href="{% url 'close_auction' listing.id %}" class="btn btn-success">Close Action</a>
+            </div>
+        {% else %}
+            <form action="{% url 'listing' listing.id %}" method="post">
+                {% csrf_token %}
+                {{ bid_form }}
+                <input class="btn btn-primary my-4" type="submit" value="Place Bid" name="bid"/>
+            </form>
+        {% endif %}
     {% else %}
-        <form action="{% url 'listing' listing.id %}" method="post">
-            {% csrf_token %}
-            {{ bid_form }}
-            <input class="btn btn-primary my-4" type="submit" value="Place Bid" name="bid"/>
-        </form>
+            <div class="text-center">
+                <h3>This Listing has been Closed !</h3>
+                <p class="lead">The winner of the auction is <a href="{% url 'profile' listing.owner.id %}">{{ listing.owner.username }}</a></p>
+            </div>
     {% endif %}
     <h3>Bids Placed so far: </h3>
     <i class="my-3 text-lead">{{ listing.bids.all|length }} bid(s) so far.</i>
@@ -81,6 +102,10 @@
             <p class="ml-5 mt-3 h1 lead">
                 {{comment.text}}
             </p>
+        </div>
+        {% empty %}
+        <div class="container bg-warning text-center text-primary p-3 mb-5">
+            No Comments...
         </div>
     {% endfor %}
 

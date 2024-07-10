@@ -1,19 +1,18 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
 from .models import User, Listing, Bid, Comment
 
-from .util import ListingForm, ListingFilter, BiddingForm, CommentForm
+from .util import ListingForm, ListingFilter, BiddingForm, CommentForm, custom_login_required
 
 
 def index(request):
     return render(request, "auctions/index.html",{
-        'listing_list': Listing.objects.filter(is_active=True),
-        'default_image': Listing.DEFAULT_IMAGE_URL
+        'listing_list': Listing.objects.filter(is_active=True)
     })
 
 
@@ -28,13 +27,19 @@ def login_view(request):
         # Check if authentication successful
         if user is not None:
             login(request, user)
-            return HttpResponseRedirect(reverse("index"))
+            next_url = request.POST.get('next', None)
+            print(next_url)
+            if next_url:
+                return redirect(next_url)
+            return HttpResponseRedirect(reverse('index'))
         else:
             return render(request, "auctions/login.html", {
                 "message": "Invalid username and/or password."
             })
     else:
-        return render(request, "auctions/login.html")
+        return render(request, "auctions/login.html", {
+            "next": request.GET.get('next', '')
+        })
 
 
 def logout_view(request):
@@ -71,11 +76,15 @@ def register(request):
 def categories_view(request):
     return render(request, "auctions/categories.html", {
         'category_listings': {category: Listing.objects.filter(category=category) for category in Listing.CATEGORIES},
-        'default_image': Listing.DEFAULT_IMAGE_URL
     })
 
-def watchlist(request):
-    pass
+
+@login_required
+def watchlist_view(request):
+    return render(request, "auctions/watchlist.html", {
+        'listing_list': request.user.watchlist.all()
+    })
+
 
 def create_listing(request):
     if request.method == "POST":
@@ -97,7 +106,6 @@ def category_view(request, category):
     return render(request, "auctions/category.html",{
         'category': category.title(),
         'listing_list': Listing.objects.filter(is_active=True, category=category.title()),
-        'default_image': Listing.DEFAULT_IMAGE_URL
     })
 
 @login_required
@@ -117,8 +125,7 @@ def profile_view(request, user_id):
             return render(request, "auctions/profile.html", {
                             "new_user": user,
                             "listing_filter": form,
-                            'listing_list': user.listings.all(),
-                            'default_image': Listing.DEFAULT_IMAGE_URL
+                            'listing_list': user.listings.all()
                         })
         
     filter_choice = request.session.get('filter_choice', 'all')
@@ -134,8 +141,7 @@ def profile_view(request, user_id):
     return render(request, "auctions/profile.html", {
                     "new_user": user,
                     "listing_filter": ListingFilter(initial={'filter_option': filter_choice}),
-                    'listing_list': listing_list,
-                    'default_image': Listing.DEFAULT_IMAGE_URL
+                    'listing_list': listing_list
                 })
 
 
@@ -143,34 +149,63 @@ def listing_view(request, listing_id):
     listing = Listing.objects.get(pk=listing_id)
     if request.method == "POST":
         print(request.POST)
-        if 'bid' in request.POST:
-            bid_form = BiddingForm(request.POST, listing=listing)
-            if bid_form.is_valid():
-                Bid(**bid_form.cleaned_data, user=request.user, listing=listing).save()
-                return HttpResponseRedirect(reverse('listing', args=[listing_id]))
+        if request.user.is_authenticated:
+            if 'bid' in request.POST:
+                bid_form = BiddingForm(request.POST, listing=listing)
+                if bid_form.is_valid():
+                    Bid(**bid_form.cleaned_data, user=request.user, listing=listing).save()
+                    return HttpResponseRedirect(reverse('listing', args=[listing_id]))
+                else:
+                    return render(request, "auctions/listing.html", {
+                            'listing' : listing,
+                            'bid_form': bid_form,
+                            'comment_form': CommentForm()
+                        })
             else:
-                return render(request, "auctions/listing.html", {
-                        'listing' : listing,
-                        'default_image': Listing.DEFAULT_IMAGE_URL,
-                        'bid_form': bid_form,
-                        'comment_form': CommentForm()
-                    })
+                comment_form = CommentForm(request.POST)
+                if comment_form.is_valid():
+                    Comment(**comment_form.cleaned_data, user=request.user, listing=listing).save()
+                    return HttpResponseRedirect(reverse('listing', args=[listing_id]))
+                else:
+                    return render(request, "auctions/listing.html", {
+                            'listing' : listing,
+                            'bid_form': BiddingForm(),
+                            'comment_form': comment_form
+                        })
         else:
-            comment_form = CommentForm(request.POST)
-            if comment_form.is_valid():
-                Comment(**comment_form.cleaned_data, user=request.user, listing=listing).save()
-                return HttpResponseRedirect(reverse('listing', args=[listing_id]))
-            else:
-                return render(request, "auctions/listing.html", {
-                        'listing' : listing,
-                        'default_image': Listing.DEFAULT_IMAGE_URL,
-                        'bid_form': BiddingForm(),
-                        'comment_form': comment_form
-                    })
-
+            return HttpResponseRedirect(f"{reverse('login')}?next=listing/{listing_id}")
+        
     return render(request, "auctions/listing.html", {
         'listing' : listing,
-        'default_image': Listing.DEFAULT_IMAGE_URL,
         'bid_form': BiddingForm(listing=listing),
         'comment_form': CommentForm()
     })
+
+def modify_watchlist(request, action, listing_id):
+    current_view = request.META.get('HTTP_REFERER', 'index')
+    print(current_view)
+    if request.user.is_authenticated:
+        listing = get_object_or_404(Listing, id=listing_id)
+        user = request.user
+        match action:
+            case 'add':
+                user.watchlist.add(listing)
+            case 'remove':
+                user.watchlist.remove(listing)
+            case _:
+                pass
+        print(user.watchlist.all())
+        return redirect(current_view)
+    else:
+        return HttpResponseRedirect(f"{reverse('login')}?next={current_view}")
+    
+@login_required
+def clear_watchlist(request):
+    request.user.watchlist.clear()
+    return HttpResponseRedirect(reverse('watchlist'))
+
+def close_auction(request, listing_id):
+    listing = Listing.objects.get(pk=listing_id)
+    listing.is_active = False
+    listing.save()
+    return HttpResponseRedirect(reverse('listing', args=[listing_id]))

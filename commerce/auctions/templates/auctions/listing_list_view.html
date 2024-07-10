@@ -11,10 +11,23 @@
                     <img src="{{ listing.image_url }}" alt="an image of {{ listing.title }}" class="img-fluid img-thumbnail fixed-size-img" onerror="this.onerror=null; this.src='{{ default_image }}';">
                 </div>
                 <div class="col-lg-8">
-                    <h3><a>{{ listing.title }}</a></h3>
+                    <h3><a href="{% url 'listing' listing.id %}">{{ listing.title }}</a></h3>
                     <p><b>Price: </b>${{ listing.start_bid }}</p>
-                    <p class="text-muted pl-4">Created {{ listing.creation_time }}</p>
-                    <a href="#" class="btn btn-danger">Add to Watchlist</a>
+                    <span title="status" class="text-light p-1 rounded m-3
+                    {% if listing.is_active %}
+                        bg-danger">Active
+                    {% else %}
+                        bg-secondary">Inactive
+                    {% endif %}
+                    </span>
+                    <p class="text-muted pl-4 mt-3">Created {{ listing.creation_time }}</p>
+                    {% if user in listing.observers.all %}
+                        {% block modify %}
+                            <i class="text-muted pl-4 border rounded">Added to watchlist</i>
+                        {% endblock %}
+                    {% else %}
+                        <a href="{% url 'modify_watchlist' 'add' listing.id %}" class="btn btn-danger">Add to Watchlist</a>
+                    {% endif %}
                 </div>
             </div>
             {% empty %}

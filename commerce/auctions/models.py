@@ -4,7 +4,8 @@ from django.utils.translation import gettext_lazy as _
 
 class User(AbstractUser):
     watchlist = models.ManyToManyField('Listing',
-                                    blank=True)
+                                    blank=True,
+                                    related_name='observers')
 
     def __str__(self):
         return f"Id: {self.id}, Username: {self.username}, Email: {self.email}, watchlist: {self.watchlist}"
@@ -20,8 +21,6 @@ class Listing(models.Model):
         "Home",
         "Other"
     )
-
-    DEFAULT_IMAGE_URL = "https://th.bing.com/th/id/OIP.mq4EytPnqsxmByNt_UmE8wHaHa?pid=ImgDet&w=203&h=203&c=7&dpr=1.3"
 
     title = models.CharField(max_length=100)
     description = models.TextField(max_length=500)

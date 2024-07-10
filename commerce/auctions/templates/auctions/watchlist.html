@@ -1,0 +1,17 @@
+{% extends "auctions/listing_list_view.html" %}
+
+{% block header %}
+    <div class="row">
+        <div class="col-10">
+            <h2>WatchList:</h2>
+        </div>
+        <div class="col-2">
+            <a href="{% url 'clear_watchlist' %}" title="clear watchlist" class="btn btn-warning mt-2">Clear Watchlist</a>
+        </div>
+    </div>
+    <hr>
+{% endblock %}
+
+{% block modify %}
+    <a href="{% url 'modify_watchlist' 'remove' listing.id %}" class="btn btn-success">Remove from watchlist</a>
+{% endblock %}

@@ -3,6 +3,9 @@ from .models import Listing, Bid, Comment
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Max
 from decimal import Decimal
+from django.shortcuts import redirect
+from django.urls import reverse
+from functools import wraps
 
 class ListingForm(forms.ModelForm):
     class Meta:
@@ -67,3 +70,17 @@ class CommentForm(forms.ModelForm):
                 'placeholder': 'Enter your comment here...'
             })
         }
+
+def custom_login_required(next='index'):
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            if request.user.is_authenticated:
+                return view_func(request, *args, **kwargs)
+            else:
+                next_url = request.GET.get('next', '')
+                if not next_url:
+                    next_url = reverse(next)
+                return redirect(f'{reverse("login")}?next={next_url}')
+        return _wrapped_view
+    return decorator
