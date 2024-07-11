@@ -9,7 +9,7 @@
         <h3>Username: <span class="lead">{{new_user.username}}</span></h3>
         <h3>Email: <a class="lead" 
         {% if new_user != user %}
-            href="mailto{{new_user.email}}" title="for contact"
+            href="mailto:{{new_user.email}}" title="for contact"
         {% endif %}
             >{{new_user.email}}</a></h3>
     </div>

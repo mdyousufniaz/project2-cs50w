@@ -9,7 +9,7 @@
     </h2>
     {% for category, listings in category_listings.items %}
         <h3 class="m-3"><a href="{% url 'category' category|lower %}">{{category}}</a></h3>
-        <div class="row flex-nowrap">
+        <div class="row flex-nowrap overflow-auto">
             {% for listing in listings %}
                     <div class="col-md-3 col-sm-6 mb-4">
                         <div class="card h-100">

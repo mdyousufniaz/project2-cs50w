@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 
 from .models import User, Listing, Bid, Comment
 
-from .util import ListingForm, ListingFilter, BiddingForm, CommentForm, custom_login_required
+from .util import ListingForm, ListingFilter, BiddingForm, CommentForm
 
 
 def index(request):
@@ -73,9 +73,10 @@ def register(request):
     else:
         return render(request, "auctions/register.html")
 
+
 def categories_view(request):
     return render(request, "auctions/categories.html", {
-        'category_listings': {category: Listing.objects.filter(category=category) for category in Listing.CATEGORIES},
+        'category_listings': {category: Listing.objects.filter(category=category, is_active=True) for category in Listing.CATEGORIES},
     })
 
 
@@ -86,6 +87,7 @@ def watchlist_view(request):
     })
 
 
+@login_required
 def create_listing(request):
     if request.method == "POST":
         form = ListingForm(request.POST)
@@ -101,6 +103,7 @@ def create_listing(request):
     return render(request, "auctions/create_listing.html",{
         "form": ListingForm()
     })
+
 
 def category_view(request, category):
     return render(request, "auctions/category.html",{
@@ -137,6 +140,9 @@ def profile_view(request, user_id):
             listing_list = user.listings.filter(is_active=False)
         case _:
             listing_list = user.listings.all()
+
+    if request.user != user:
+        listing_list = user.listings.filter(is_active=True)
     
     return render(request, "auctions/profile.html", {
                     "new_user": user,
@@ -153,7 +159,7 @@ def listing_view(request, listing_id):
             if 'bid' in request.POST:
                 bid_form = BiddingForm(request.POST, listing=listing)
                 if bid_form.is_valid():
-                    Bid(**bid_form.cleaned_data, user=request.user, listing=listing).save()
+                    Bid(**bid_form.cleaned_data, bidder=request.user, listing=listing).save()
                     return HttpResponseRedirect(reverse('listing', args=[listing_id]))
                 else:
                     return render(request, "auctions/listing.html", {
@@ -164,7 +170,7 @@ def listing_view(request, listing_id):
             else:
                 comment_form = CommentForm(request.POST)
                 if comment_form.is_valid():
-                    Comment(**comment_form.cleaned_data, user=request.user, listing=listing).save()
+                    Comment(**comment_form.cleaned_data, commenter=request.user, listing=listing).save()
                     return HttpResponseRedirect(reverse('listing', args=[listing_id]))
                 else:
                     return render(request, "auctions/listing.html", {

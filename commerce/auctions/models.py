@@ -47,24 +47,21 @@ class Listing(models.Model):
         )
     
 
-class UserListing(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    class Meta:
-        abstract = True
 
 
-class Bid(UserListing):
+class Bid(models.Model):
+    bidder = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.DecimalField(decimal_places=2, max_digits=10)
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='bids')
 
     def __str__(self):
-        return f"Id: {self.id}, Bidder: {self.user}, Amount: ${self.amount}, Listing: {self.listing}"
+        return f"Id: {self.id}, Bidder: {self.bidder}, Amount: ${self.amount}, Listing: {self.listing}"
 
-class Comment(UserListing):
+class Comment(models.Model):
+    commenter = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField(max_length=500)
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='comments')
 
     def __str__(self):
-        return f"Id: {self.id}, Commenter: {self.user}, Text: {self.text}, Listing: {self.listing}"
+        return f"Id: {self.id}, Commenter: {self.commenter}, Text: {self.text}, Listing: {self.listing}"
     

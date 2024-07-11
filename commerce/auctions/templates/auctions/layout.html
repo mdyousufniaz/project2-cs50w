@@ -32,7 +32,11 @@
                     <a class="nav-link" href="{% url 'profile' user.id %}">My Profile</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'watchlist' %}">Watchlist</a>
+                    <a class="nav-link" href="{% url 'watchlist' %}">Watchlist
+                        {% if user.watchlist.all %}
+                            <sup class="bg-secondary text-white px-1 font-weight-bold">{{ user.watchlist.all|length }}</sup>
+                        {% endif %}
+                    </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'logout' %}">Logout</a>

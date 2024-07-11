@@ -61,7 +61,15 @@
     {% else %}
             <div class="text-center">
                 <h3>This Listing has been Closed !</h3>
-                <p class="lead">The winner of the auction is <a href="{% url 'profile' listing.owner.id %}">{{ listing.owner.username }}</a></p>
+                <p class="lead">
+                    {% for bid in listing.bids.all %}
+                        {% if forloop.last %}
+                            The winner of the auction is <a href="{% url 'profile' bid.bidder.id %}">{{ bid.bidder.username }}</a>
+                        {% endif %}
+                    {% empty %}
+                        <span class="text-muted">No winner.</span>
+                    {% endfor %}
+                </p>
             </div>
     {% endif %}
     <h3>Bids Placed so far: </h3>
@@ -77,7 +85,7 @@
                 {% for bid in listing.bids.all reversed %}
                     <tr>
                         <td>{{ bid.id }}</td>
-                        <td>{{bid.user.username}}</td>
+                        <td><a href="{% url 'profile' bid.bidder.id %}">{{bid.bidder.username}}</a></td>
                         <td>{{bid.amount}}</td>
                     </tr>
                     {% empty %}
@@ -98,7 +106,7 @@
     <h4 class="mb-3">All Comments :</h4>
     {% for comment in listing.comments.all %}
         <div class="border border-info border-4 rounded-3 p-3 mb-4">
-            <i class="mb-3">{{comment.user.username}}</i>
+            <i class="mb-3"><a href="{% url 'profile' comment.commenter.id %}">{{comment.commenter.username}}</a></i>
             <p class="ml-5 mt-3 h1 lead">
                 {{comment.text}}
             </p>

@@ -27,7 +27,7 @@ class ListingForm(forms.ModelForm):
 class BiddingForm(forms.ModelForm):
     class Meta:
         model = Bid
-        exclude = ['user', 'listing']
+        exclude = ['bidder', 'listing']
 
         labels = {
             'amount': 'Place Your Bid'
@@ -71,16 +71,3 @@ class CommentForm(forms.ModelForm):
             })
         }
 
-def custom_login_required(next='index'):
-    def decorator(view_func):
-        @wraps(view_func)
-        def _wrapped_view(request, *args, **kwargs):
-            if request.user.is_authenticated:
-                return view_func(request, *args, **kwargs)
-            else:
-                next_url = request.GET.get('next', '')
-                if not next_url:
-                    next_url = reverse(next)
-                return redirect(f'{reverse("login")}?next={next_url}')
-        return _wrapped_view
-    return decorator

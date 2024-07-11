@@ -5,6 +5,7 @@ body {
 .fixed-size-img {
     height: 350px;      /* Set a fixed height for the images */
     object-fit: cover;  /* Cover ensures the image fills the container while maintaining aspect ratio */
+    width: auto;
 }
 
 hr {
